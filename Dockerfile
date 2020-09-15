@@ -1,10 +1,10 @@
-FROM adoptopenjdk/openjdk11 as build
+FROM openjdk:8-jdk-alpine as build
 
 RUN apk add --update ca-certificates && rm -rf /var/cache/apk/* && \
   find /usr/share/ca-certificates/mozilla/ -name "*.crt" -exec keytool -import -trustcacerts \
-  -keystore /usr/lib/jvm/java-11-openjdk/jre/lib/security/cacerts -storepass changeit -noprompt \
+  -keystore /usr/lib/jvm/java-1.8-openjdk/jre/lib/security/cacerts -storepass changeit -noprompt \
   -file {} -alias {} \; && \
-  keytool -list -keystore /usr/lib/jvm/java-11-openjdk/jre/lib/security/cacerts --storepass changeit
+  keytool -list -keystore /usr/lib/jvm/java-1.8-openjdk/jre/lib/security/cacerts --storepass changeit
 
 ENV MAVEN_VERSION 3.6.3
 ENV MAVEN_HOME /usr/lib/mvn
@@ -23,9 +23,9 @@ COPY src src
 RUN mvn install -DskipTests
 RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
-FROM adoptopenjdk/openjdk11
+FROM openjdk:8-jdk-alpine
 ARG DEPENDENCY=/workspace/app/target/dependency
 COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
 COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
 COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
-ENTRYPOINT ["java","-cp","app:app/lib/*","books.BooksApplication"]
+ENTRYPOINT ["java","-cp","app:app/lib/*","books.BooksappApplication"]
